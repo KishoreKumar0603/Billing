@@ -30,21 +30,17 @@ export const getAllBills = async (req, res)  =>{
 
 export const addBill = async (req, res) =>{
     try {
-        
         const {userId, bill} = req.body;
         if(!userId){
             return res.json({
                 error:"User id didn't received"
             });
         }
-
         if(!bill){
             return res.json({
                 error:"Entry empty"
             });
         }
-        
-
         let billObj = await Bill.findOne({userId});
         if(!billObj){
             billObj = await Bill.create({userId:userId, bills:[]});
@@ -134,7 +130,25 @@ export const deleteBill  = async (req, res) => {
         
         const bill =userEntry.bills.id(billId);
 
+        if(!bill){
+            return res.json({
+                error:"Bill entry not found..."
+            });
+        }
         //pending
+        try {
+            userEntry.bills.pull(billId);
+            await userEntry.save();
+        } catch (error) {
+            return  res.json({
+                error:error.message
+            });
+        }
+
+
+        return res.json({
+            userEntry,
+        })
 
     } catch (error) {
         return res.json({
