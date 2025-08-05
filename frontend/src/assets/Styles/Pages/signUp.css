@@ -1,8 +1,8 @@
-/* .left-bar{
-    background-image: url(../../images/Login-1.jpg);
+.left-bar{
+    background-image: url(../../images/login-2.jpg);
     background-position: center;
     background-size: cover;
-} */
+}
 
 .container{
     backdrop-filter: blur(10px);
