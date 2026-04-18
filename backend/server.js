@@ -19,7 +19,7 @@ app.use(cors({
 
 app.use('/api',userRoutes);
 app.use('/api/bill', billRoutes);
-
+console.log("Connecting to Mongo DB...");
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING)
 .then(() =>{
     console.log(`Mongo DB Connected to URL : ${process.env.MONGODB_CONNECTION_STRING}`);
