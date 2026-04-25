@@ -9,7 +9,7 @@ import { Shimmer } from "@/components/common/Skeleton";
 
 export default function CustomerDetails() {
   const { id } = useParams();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState(null);
   useEffect(() => { if (id) customersService.get(id).then(setData); }, [id]);
 
   if (!data) return <div className="space-y-4"><Shimmer className="h-32" /><Shimmer className="h-48" /></div>;
@@ -61,7 +61,7 @@ export default function CustomerDetails() {
         <div className="p-5 border-b border-border"><p className="font-medium">Recent bills</p></div>
         <div className="divide-y divide-border">
           {recentBills.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">No bills yet.</div>}
-          {recentBills.map((b: any) => (
+          {recentBills.map((b) => (
             <Link to={`/app/bills/${b._id}`} key={b._id} className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors">
               <div>
                 <p className="font-medium">{b.billNumber}</p>
