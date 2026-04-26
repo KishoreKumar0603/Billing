@@ -3,9 +3,12 @@ import express from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
+import customerRoutes from "./routes/customerRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
+import { protect } from "./middleware/authMiddleware.js";
 dotenv.config();
 
 const alllowedOrigin = ["http://localhost:5173"];
@@ -22,8 +25,10 @@ app.use(
 
 app.use("/api", apiLimiter);
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/bill", billRoutes);
+app.use("/api/user", protect, userRoutes);
+app.use("/api/bill", protect, billRoutes);
+app.use("/api/customer", protect ,customerRoutes);
+app.use("/api/dashboard", protect, dashboardRoutes);
 mongoose
   .connect(process.env.MONGODB_CONNECTION_STRING)
   .then(() => {

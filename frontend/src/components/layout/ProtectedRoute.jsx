@@ -1,48 +1,23 @@
-import {
-  Navigate,
-  useLocation,
-} from "react-router-dom";
-
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/stores/auth.store";
+import { useEffect, useState } from "react";
 
-import {
-  useEffect,
-  useState,
-} from "react";
+export function ProtectedRoute({ children }) {
+  const { isAuthenticated, hydrate } = useAuth();
 
-import { tokenStore } from "@/services/api";
+  const [ready, setReady] = useState(false);
 
-export function ProtectedRoute({
-  children,
-}) {
-  const {
-    isAuthenticated,
-    hydrate,
-  } = useAuth();
-
-  const [ready, setReady] =
-    useState(
-      isAuthenticated
-    );
-
-  const location =
-    useLocation();
+  const location = useLocation();
 
   useEffect(() => {
-    if (
-      !isAuthenticated &&
-      tokenStore.get()
-    ) {
-      hydrate().finally(() =>
-        setReady(true)
-      );
-    } else {
+    async function checkAuth() {
+      await hydrate();
+
       setReady(true);
     }
-  }, [
-    isAuthenticated,
-    hydrate,
-  ]);
+
+    checkAuth();
+  }, [hydrate]);
 
   if (!ready) {
     return (
@@ -53,16 +28,8 @@ export function ProtectedRoute({
   }
 
   if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        state={{
-          from: location,
-        }}
-        replace
-      />
-    );
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  return <>{children}</>;
+  return children;
 }

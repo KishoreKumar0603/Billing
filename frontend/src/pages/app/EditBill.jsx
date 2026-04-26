@@ -1,13 +1,6 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-  Link,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { ArrowLeft } from "lucide-react";
 
@@ -22,22 +15,15 @@ import { Shimmer } from "@/components/common/Skeleton";
 export default function EditBill() {
   const { id } = useParams();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const [bill, setBill] =
-    useState(null);
+  const [bill, setBill] = useState(null);
 
-  const [
-    submitting,
-    setSubmitting,
-  ] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
-      billsService
-        .get(id)
-        .then(setBill);
+      billsService.get(id).then(setBill);
     }
   }, [id]);
 
@@ -63,35 +49,26 @@ export default function EditBill() {
 
       <div>
         <h1 className="font-display text-2xl lg:text-3xl font-bold">
-          Edit Bill{" "}
-          {bill.billNumber}
+          Edit Bill {bill.billNumber}
         </h1>
       </div>
 
       <BillForm
         submitting={submitting}
         defaultValues={{
-          customer:
-            bill.customer
-              ._id ||
-            bill.customer,
+          customer: bill.customer._id || bill.customer,
 
-          lotNumber:
-            bill.lotNumber,
+          lotNumber: bill.lotNumber?.replace("LOT-", "") || "",
 
-          vehicleNumber:
-            bill.vehicleNumber,
+          vehicleNumber: bill.vehicleNumber,
 
-          fromName:
-            bill.fromName,
+          fromName: bill.fromName,
 
-          address:
-            bill.address,
+          address: bill.address,
 
           rows: bill.rows,
 
-          receivedAmount:
-            bill.receivedAmount,
+          receivedAmount: bill.receivedAmount,
 
           status: bill.status,
 
@@ -101,26 +78,15 @@ export default function EditBill() {
           setSubmitting(true);
 
           try {
-            await billsService.update(
-              id,
-              v
-            );
+            await billsService.update(id, v);
 
-            toast.success(
-              "Bill updated"
-            );
+            toast.success("Bill updated");
 
-            navigate(
-              `/app/bills/${id}`
-            );
+            navigate(`/app/bills/${id}`);
           } catch {
-            toast.error(
-              "Failed to update"
-            );
+            toast.error("Failed to update");
           } finally {
-            setSubmitting(
-              false
-            );
+            setSubmitting(false);
           }
         }}
       />

@@ -1,52 +1,84 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"
 
-export const api = axios.create({ baseURL: API_BASE, withCredentials: true });
+export const api = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+});
 
 const TOKEN_KEY = "billingit_access_token";
+
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
-  set: (t) => localStorage.setItem(TOKEN_KEY, t),
+
+  set: (token) => localStorage.setItem(TOKEN_KEY, token),
+
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
+// Attach token automatically
 api.interceptors.request.use((config) => {
-  const t = tokenStore.get();
-  if (t) config.headers.Authorization = `Bearer ${t}`;
+  const token = tokenStore.get();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
 
+// Refresh token logic
 let refreshing = null;
+
 async function refreshToken() {
   try {
     const { data } = await api.post("/auth/refresh-token");
+
     if (data?.accessToken) {
       tokenStore.set(data.accessToken);
       return data.accessToken;
     }
+
     return null;
-  } catch {
+  } catch (err) {
     return null;
   }
 }
 
+// Auto retry on 401
 api.interceptors.response.use(
-  (r) => r,
+  (response) => response,
+
   async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+
       refreshing = refreshing || refreshToken();
-      const token = await refreshing;
+
+      const newToken = await refreshing;
+
       refreshing = null;
-      if (token) {
-        original.headers.Authorization = `Bearer ${token}`;
-        return api(original);
+
+      if (newToken) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        return api(originalRequest);
       }
+
       tokenStore.clear();
-      if (!location.pathname.startsWith("/login")) location.href = "/login";
+
+      if (!location.pathname.startsWith("/login")) {
+        location.href = "/login";
+      }
     }
+
     return Promise.reject(error);
-  },
+  }
 );

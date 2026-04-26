@@ -6,7 +6,7 @@ import {
   getSingleBill,
   updateBill,
   deleteBill,
-} from "../controllers/billController.js";
+} from "../controller/billController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import { generateBillPDF } from "../controller/pdfController.js";

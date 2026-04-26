@@ -47,17 +47,9 @@ export const deleteUser = async (req, res) => {
 
 export const profile = async (req, res) => {
   try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.json({
-        error: "Email missing",
-      });
-    }
-    const user = await User.find({ email }).select("-password");
-    return res.json(user);
+    return res.json(req.user);
   } catch (error) {
-    return res.json({
+    return res.status(500).json({
       error: error.message,
     });
   }

@@ -17,7 +17,7 @@ export default function VerifyOtp() {
   const navigate = useNavigate();
 
   const submit = async () => {
-    if (otp.length < 6) return toast.error("Enter 6-digit OTP");
+    if (otp.length < 4) return toast.error("Enter 4-digit OTP");
     setLoading(true);
     try { await verifyOtp(email, otp); toast.success("Account verified"); navigate("/app/dashboard"); }
     catch { toast.error("Invalid OTP"); }
@@ -31,7 +31,7 @@ export default function VerifyOtp() {
       <div className="space-y-5">
         <InputOTP maxLength={6} value={otp} onChange={setOtp}>
           <InputOTPGroup>
-            {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} className="h-12 w-12 text-lg" />)}
+            {[0,1,2,3,].map(i => <InputOTPSlot key={i} index={i} className="h-12 w-12 text-lg" />)}
           </InputOTPGroup>
         </InputOTP>
         <Button onClick={submit} disabled={loading} className="w-full h-11 bg-gradient-primary shadow-elegant">{loading ? <Loader2 className="h-4 w-4 animate-spin"/> : "Verify"}</Button>

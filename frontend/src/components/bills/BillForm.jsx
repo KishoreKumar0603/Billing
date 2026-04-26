@@ -30,6 +30,8 @@ import { formatCurrency } from "@/lib/format";
 
 import { motion, AnimatePresence } from "framer-motion";
 
+// ================= SCHEMA =================
+
 const schema = z.object({
   customer: z.string().min(1, "Select a customer"),
 
@@ -60,12 +62,28 @@ const schema = z.object({
   notes: z.string().max(500).optional(),
 });
 
+// ================= COMPONENT =================
+
 export function BillForm({ defaultValues, onSubmit, submitting }) {
   const [customers, setCustomers] = useState([]);
 
+  // ================= LOAD CUSTOMERS =================
+
   useEffect(() => {
-    customersService.list().then(setCustomers);
+    const loadCustomers = async () => {
+      try {
+        const data = await customersService.list();
+
+        setCustomers(data.customers || []);
+      } catch {
+        setCustomers([]);
+      }
+    };
+
+    loadCustomers();
   }, []);
+
+  // ================= FORM =================
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -75,27 +93,15 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
 
       lotNumber: "",
 
-      vehicleNumber: "",
+      vehicleNumber: "TN58AU0285",
 
-      fromName: "BillingIT Textiles",
+      fromName: "Geethanjali Garments",
 
-      address: "Ring Road, Surat, Gujarat",
+      address: "West street, Mallappuram, Madurai - 625535",
 
       rows: [
         {
           label: "M",
-          quantity: 0,
-          rate: 0,
-        },
-
-        {
-          label: "L",
-          quantity: 0,
-          rate: 0,
-        },
-
-        {
-          label: "XL",
           quantity: 0,
           rate: 0,
         },
@@ -117,22 +123,65 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
     control,
     watch,
     setValue,
+    reset,
 
     formState: { errors },
   } = form;
+
+  // ================= RESET FORM =================
+
+  useEffect(() => {
+    if (defaultValues) {
+      reset({
+        customer: "",
+
+        lotNumber: "",
+
+        vehicleNumber: "TN58AU0285",
+
+        fromName: "Geethanjali Garments",
+
+        address: "West street, Mallappuram, Madurai - 625535",
+
+        rows: [
+          {
+            label: "M",
+            quantity: 0,
+            rate: 0,
+          },
+        ],
+
+        receivedAmount: 0,
+
+        status: "working",
+
+        notes: "",
+
+        ...defaultValues,
+      });
+    }
+  }, [defaultValues, reset]);
+
+  // ================= ROWS =================
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "rows",
   });
 
-  const rows = watch("rows");
+  // ================= WATCH =================
+
+  const rows = watch("rows") || [];
+
+  const selectedCustomerId = watch("customer");
 
   const received = Number(watch("receivedAmount") || 0);
 
+  // ================= TOTAL =================
+
   const total = useMemo(() => {
     return rows.reduce(
-      (s, r) => s + (Number(r.quantity) || 0) * (Number(r.rate) || 0),
+      (sum, row) => sum + (Number(row.quantity) || 0) * (Number(row.rate) || 0),
 
       0,
     );
@@ -140,10 +189,16 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
 
   const balance = Math.max(0, total - received);
 
+  // ================= UI =================
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* ================= LEFT ================= */}
+
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
+          {/* HEADER */}
+
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div>
               <p className="font-display text-lg font-bold">Delivery Challan</p>
@@ -162,7 +217,11 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
             </div>
           </div>
 
+          {/* FORM GRID */}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* CUSTOMER */}
+
             <div>
               <Label>Customer</Label>
 
@@ -194,6 +253,8 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
               )}
             </div>
 
+            {/* STATUS */}
+
             <div>
               <Label>Status</Label>
 
@@ -213,13 +274,15 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
               </Select>
             </div>
 
+            {/* LOT */}
+
             <div>
               <Label>Lot Number</Label>
 
               <Input
                 {...register("lotNumber")}
                 className="mt-1.5 h-11 font-mono"
-                placeholder="LOT-000"
+                placeholder="000"
               />
 
               {errors.lotNumber && (
@@ -229,21 +292,20 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
               )}
             </div>
 
+            {/* VEHICLE */}
+
             <div>
               <Label>Vehicle Number</Label>
 
               <Input
                 {...register("vehicleNumber")}
-                className="mt-1.5 h-11 font-mono uppercase"
-                placeholder="GJ-05-0000"
-              />
+                className="mt-1.5 h-11 uppercase"
+                placeholder="TN-00-0000"
 
-              {errors.vehicleNumber && (
-                <p className="text-xs text-destructive mt-1">
-                  {errors.vehicleNumber.message}
-                </p>
-              )}
+              />
             </div>
+
+            {/* FROM */}
 
             <div>
               <Label>From</Label>
@@ -251,12 +313,16 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
               <Input {...register("fromName")} className="mt-1.5 h-11" />
             </div>
 
+            {/* ADDRESS */}
+
             <div>
               <Label>Address</Label>
 
               <Input {...register("address")} className="mt-1.5 h-11" />
             </div>
           </div>
+
+          {/* ================= ITEMS ================= */}
 
           <div className="pt-3">
             <div className="flex items-center justify-between mb-2">
@@ -269,9 +335,7 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
                 onClick={() =>
                   append({
                     label: "",
-
                     quantity: 0,
-
                     rate: 0,
                   })
                 }
@@ -282,7 +346,9 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
             </div>
 
             <div className="rounded-xl border border-border overflow-hidden">
-              <div className="grid grid-cols-12 gap-2 bg-secondary/60 px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {/* HEADER */}
+
+              <div className="grid grid-cols-12 gap-2 bg-secondary/60 px-3 py-2 text-xs font-medium uppercase">
                 <div className="col-span-3">Label</div>
 
                 <div className="col-span-3">Qty</div>
@@ -294,8 +360,10 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
                 <div className="col-span-1" />
               </div>
 
+              {/* ROWS */}
+
               <AnimatePresence initial={false}>
-                {fields.map((f, i) => {
+                {fields.map((field, i) => {
                   const qty = Number(rows[i]?.quantity) || 0;
 
                   const rate = Number(rows[i]?.rate) || 0;
@@ -304,7 +372,7 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
 
                   return (
                     <motion.div
-                      key={f.id}
+                      key={field.id}
                       initial={{
                         opacity: 0,
                         height: 0,
@@ -321,14 +389,13 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
                     >
                       <Input
                         className="col-span-3 h-10"
-                        placeholder="M / L / XL"
+                        placeholder="M"
                         {...register(`rows.${i}.label`)}
                       />
 
                       <Input
                         className="col-span-3 h-10"
                         type="number"
-                        step="1"
                         {...register(`rows.${i}.quantity`)}
                       />
 
@@ -339,7 +406,7 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
                         {...register(`rows.${i}.rate`)}
                       />
 
-                      <div className="col-span-2 text-right font-display font-semibold tabular-nums">
+                      <div className="col-span-2 text-right font-bold">
                         {formatCurrency(amt)}
                       </div>
 
@@ -347,7 +414,7 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
                         type="button"
                         disabled={fields.length <= 1}
                         onClick={() => remove(i)}
-                        className="col-span-1 justify-self-end grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
+                        className="col-span-1 justify-self-end"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -358,34 +425,31 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
             </div>
           </div>
 
+          {/* NOTES */}
+
           <div>
             <Label>Notes</Label>
 
-            <Textarea
-              rows={2}
-              {...register("notes")}
-              className="mt-1.5"
-              placeholder="Optional notes..."
-            />
+            <Textarea rows={2} {...register("notes")} className="mt-1.5" />
           </div>
         </div>
+
+        {/* ================= RIGHT ================= */}
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-card h-fit sticky top-20 space-y-4">
           <p className="font-display font-bold">Summary</p>
 
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Items</span>
+              <span>Items</span>
 
-              <span className="font-medium">{fields.length}</span>
+              <span>{fields.length}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total</span>
+              <span>Total</span>
 
-              <span className="font-display font-bold text-lg">
-                {formatCurrency(total)}
-              </span>
+              <span className="font-bold">{formatCurrency(total)}</span>
             </div>
 
             <div>
@@ -399,24 +463,14 @@ export function BillForm({ defaultValues, onSubmit, submitting }) {
               />
             </div>
 
-            <div className="flex justify-between pt-2 border-t border-border">
-              <span className="text-muted-foreground">Balance</span>
+            <div className="flex justify-between pt-2 border-t">
+              <span>Balance</span>
 
-              <span
-                className={`font-display font-bold ${
-                  balance > 0 ? "text-destructive" : "text-success"
-                }`}
-              >
-                {formatCurrency(balance)}
-              </span>
+              <span>{formatCurrency(balance)}</span>
             </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-11 bg-gradient-primary shadow-elegant"
-          >
+          <Button type="submit" disabled={submitting} className="w-full h-11">
             {submitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

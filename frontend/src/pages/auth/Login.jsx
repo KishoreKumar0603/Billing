@@ -6,16 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { z } from "zod";
 
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import {
-  Eye,
-  EyeOff,
-  Loader2,
-} from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -30,74 +23,36 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/stores/auth.store";
 
 const schema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email(
-      "Enter a valid email"
-    ),
+  email: z.string().trim().email("Enter a valid email"),
 
-  password: z
-    .string()
-    .min(
-      6,
-      "At least 6 characters"
-    ),
+  password: z.string().min(6, "At least 6 characters"),
 });
 
 export default function Login() {
-  const [show, setShow] =
-    useState(false);
+  const [show, setShow] = useState(false);
 
-  const {
-    login,
-    googleLogin,
-    loading,
-  } = useAuth();
+  const { login, googleLogin, loading } = useAuth();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
 
-    formState: {
-      errors,
-    },
+    formState: { errors },
   } = useForm({
-    resolver:
-      zodResolver(schema),
-
-    defaultValues: {
-      email:
-        "demo@billingit.app",
-
-      password:
-        "demo1234",
-    },
+    resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (
-    values
-  ) => {
+  const onSubmit = async (values) => {
     try {
-      await login(
-        values.email,
-        values.password
-      );
+      await login(values.email, values.password);
 
-      toast.success(
-        "Welcome back!"
-      );
+      toast.success("Welcome back!");
 
-      navigate(
-        "/app/dashboard"
-      );
+      navigate("/app/dashboard");
     } catch {
-      toast.error(
-        "Invalid credentials"
-      );
+      toast.error("Invalid credentials");
     }
   };
 
@@ -106,42 +61,28 @@ export default function Login() {
       title="Welcome back"
       subtitle="Sign in to manage your textile business"
     >
-      <form
-        onSubmit={handleSubmit(
-          onSubmit
-        )}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <Label htmlFor="email">
-            Email
-          </Label>
+          <Label htmlFor="email">Email</Label>
 
           <Input
             id="email"
             type="email"
             placeholder="you@business.com"
-            {...register(
-              "email"
-            )}
+            {...register("email")}
             className="mt-1.5 h-11"
           />
 
           {errors.email && (
             <p className="text-xs text-destructive mt-1">
-              {
-                errors.email
-                  .message
-              }
+              {errors.email.message}
             </p>
           )}
         </div>
 
         <div>
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">
-              Password
-            </Label>
+            <Label htmlFor="password">Password</Label>
 
             <Link
               to="/forgot-password"
@@ -154,25 +95,15 @@ export default function Login() {
           <div className="relative mt-1.5">
             <Input
               id="password"
-              type={
-                show
-                  ? "text"
-                  : "password"
-              }
+              type={show ? "text" : "password"}
               placeholder="••••••••"
-              {...register(
-                "password"
-              )}
+              {...register("password")}
               className="h-11 pr-10"
             />
 
             <button
               type="button"
-              onClick={() =>
-                setShow(
-                  !show
-                )
-              }
+              onClick={() => setShow(!show)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             >
               {show ? (
@@ -185,27 +116,17 @@ export default function Login() {
 
           {errors.password && (
             <p className="text-xs text-destructive mt-1">
-              {
-                errors
-                  .password
-                  .message
-              }
+              {errors.password.message}
             </p>
           )}
         </div>
 
         <Button
           type="submit"
-          disabled={
-            loading
-          }
+          disabled={loading}
           className="w-full h-11 bg-gradient-primary hover:opacity-90 shadow-elegant"
         >
-          {loading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "Sign in"
-          )}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
         </Button>
 
         <div className="relative my-4">
@@ -214,9 +135,7 @@ export default function Login() {
           </div>
 
           <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">
-              OR
-            </span>
+            <span className="bg-background px-2 text-muted-foreground">OR</span>
           </div>
         </div>
 
@@ -228,24 +147,15 @@ export default function Login() {
             try {
               await googleLogin();
 
-              toast.success(
-                "Signed in with Google"
-              );
+              toast.success("Signed in with Google");
 
-              navigate(
-                "/app/dashboard"
-              );
+              navigate("/app/dashboard");
             } catch {
-              toast.error(
-                "Google sign-in failed"
-              );
+              toast.error("Google sign-in failed");
             }
           }}
         >
-          <svg
-            className="h-4 w-4 mr-2"
-            viewBox="0 0 48 48"
-          >
+          <svg className="h-4 w-4 mr-2" viewBox="0 0 48 48">
             <path
               fill="#EA4335"
               d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -266,20 +176,16 @@ export default function Login() {
               d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
             />
           </svg>
-
-          Continue with
-          Google
+          Continue with Google
         </Button>
 
         <p className="text-center text-sm text-muted-foreground pt-2">
-          New to
-          BillingIT?{" "}
+          New to BillingIT?{" "}
           <Link
             to="/register"
             className="text-primary font-medium hover:underline"
           >
-            Create an
-            account
+            Create an account
           </Link>
         </p>
       </form>

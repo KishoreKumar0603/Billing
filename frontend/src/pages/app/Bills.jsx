@@ -76,7 +76,9 @@ export default function Bills() {
 
         paymentStatus: paymentStatus === "all" ? undefined : paymentStatus,
       })
-      .then((r) => setData(r));
+      .then((r) => {
+        setData(r)
+      });
   };
 
   useEffect(() => {
@@ -235,7 +237,7 @@ export default function Bills() {
                   className="border-b border-border hover:bg-secondary/40 transition-colors"
                 >
                   <td className="px-5 py-3">
-                    <p className="font-medium">{b.billNumber}</p>
+                    <p className="font-medium">{b.billNumber || "sn"}</p>
                   </td>
 
                   <td className="px-5 py-3">

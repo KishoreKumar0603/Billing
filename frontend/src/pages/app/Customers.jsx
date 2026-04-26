@@ -73,7 +73,10 @@ const schema = z.object({
 
 export default function Customers() {
   const [items, setItems] =
-    useState(null);
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   const [q, setQ] =
     useState("");
@@ -95,12 +98,27 @@ export default function Customers() {
       zodResolver(schema),
   });
 
-  const load = () => {
-    setItems(null);
+  const load = async () => {
+    try {
+      setLoading(true);
 
-    customersService
-      .list(q)
-      .then(setItems);
+      const data =
+        await customersService.list(
+          q
+        );
+
+      setItems(
+        data.customers ||
+          []
+      );
+    } catch {
+      setItems([]);
+      toast.error(
+        "Failed to load customers"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -113,29 +131,28 @@ export default function Customers() {
       clearTimeout(t);
   }, [q]);
 
-  const onCreate = async (
-    v
-  ) => {
-    try {
-      await customersService.create(
-        v
-      );
+  const onCreate =
+    async (v) => {
+      try {
+        await customersService.create(
+          v
+        );
 
-      toast.success(
-        "Customer added"
-      );
+        toast.success(
+          "Customer added"
+        );
 
-      reset();
+        reset();
 
-      setOpen(false);
+        setOpen(false);
 
-      load();
-    } catch {
-      toast.error(
-        "Failed to add customer"
-      );
-    }
-  };
+        load();
+      } catch {
+        toast.error(
+          "Failed to add customer"
+        );
+      }
+    };
 
   return (
     <div className="space-y-6">
@@ -146,14 +163,17 @@ export default function Customers() {
           </h1>
 
           <p className="text-muted-foreground mt-1">
-            Your entire customer
-            book in one place.
+            Your entire
+            customer book
+            in one place.
           </p>
         </div>
 
         <Dialog
           open={open}
-          onOpenChange={setOpen}
+          onOpenChange={
+            setOpen
+          }
         >
           <DialogTrigger asChild>
             <Button className="bg-gradient-primary shadow-elegant">
@@ -165,7 +185,8 @@ export default function Customers() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                New Customer
+                New
+                Customer
               </DialogTitle>
             </DialogHeader>
 
@@ -253,7 +274,9 @@ export default function Customers() {
                   type="button"
                   variant="ghost"
                   onClick={() =>
-                    setOpen(false)
+                    setOpen(
+                      false
+                    )
                   }
                 >
                   Cancel
@@ -281,7 +304,8 @@ export default function Customers() {
           value={q}
           onChange={(e) =>
             setQ(
-              e.target.value
+              e.target
+                .value
             )
           }
           placeholder="Search by name or phone..."
@@ -289,7 +313,7 @@ export default function Customers() {
         />
       </div>
 
-      {items === null ? (
+      {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map(
             (_, i) => (
@@ -300,7 +324,8 @@ export default function Customers() {
             )
           )}
         </div>
-      ) : items.length === 0 ? (
+      ) : items.length ===
+        0 ? (
         <div className="rounded-2xl border border-border bg-card">
           <EmptyState
             icon={
@@ -326,7 +351,8 @@ export default function Customers() {
                 }}
                 transition={{
                   delay:
-                    i * 0.03,
+                    i *
+                    0.03,
                 }}
               >
                 <Link
@@ -337,18 +363,23 @@ export default function Customers() {
                     <div className="flex items-center gap-3">
                       <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-primary text-primary-foreground font-display font-bold shadow-elegant">
                         {
-                          c.name[0]
+                          c
+                            .name[0]
                         }
                       </div>
 
                       <div className="min-w-0">
                         <p className="font-medium truncate">
-                          {c.name}
+                          {
+                            c.name
+                          }
                         </p>
 
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <Phone className="h-3 w-3" />
-                          {c.phone}
+                          {
+                            c.phone
+                          }
                         </p>
                       </div>
                     </div>

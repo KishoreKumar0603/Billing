@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import sendMail from "../utils/sendMail.js";
 import crypto from "crypto";
 
-
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
@@ -122,22 +121,21 @@ export const login = async (req, res) => {
         error: "Invalid Credentials",
       });
     }
-    if(!user.isVerified) {
-        return res.status(400).json({
-            error:"Account Not Verified... Please Verify Your Account"
-        });
+    if (!user.isVerified) {
+      return res.status(400).json({
+        error: "Account Not Verified... Please Verify Your Account",
+      });
     }
 
-    if(user.isLocked()) {
+    if (user.isLocked()) {
       return res.status(403).json({
-        error:"Account Locked , Try after sometimes"
-      })
+        error: "Account Locked , Try after sometimes",
+      });
     }
-    
 
     if (!(await user.matchPassword(password))) {
       user.loginAttempts += 1;
-      if(user.loginAttempts >= 5) {
+      if (user.loginAttempts >= 5) {
         user.lockUntil = Date.now() + 15 * 60 * 1000;
       }
       await user.save();
@@ -155,76 +153,78 @@ export const login = async (req, res) => {
     await user.save();
 
     res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure:true,
-        sameSite:"strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    const safeUser = await User.findById(user._id).select(
+      "-password -refreshToken",
+    );
 
     return res.status(200).json({
-        message: "Login Successfull",
-        accessToken,
+      message: "Login Successful",
+      accessToken,
+      user: safeUser,
     });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
 
+export const refreshToken = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
 
-export const refreshToken = async(req, res) => {
-    try {
-        const token = req.cookies.refreshToken;
-
-        if(!token) {
-            return res.status(401).json({
-                error:"No refresh token"
-            });
-        }
-
-        const decoded  = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-
-        const user = await User.findById(decoded.id);
-        if(!user || user.refreshToken !== token) {
-            return res.status(403).json({
-                error:"Invalid token"
-            })
-        }
-
-        const newAccessToken = generateAccessToken(user);
-    
-        return res.status(200).json({accessToken : newAccessToken});
-
-    } catch ( error) {
-        return res.status(500).json({
-            error:error.message
-        })
+    if (!token) {
+      return res.status(401).json({
+        error: "No refresh token",
+      });
     }
-}
+
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user || user.refreshToken !== token) {
+      return res.status(403).json({
+        error: "Invalid token",
+      });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+
+    return res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
 
 export const logout = async (req, res) => {
-    try {
-        const token = req.cookies.refreshToken;
+  try {
+    const token = req.cookies.refreshToken;
 
-        if(token) {
-            const user = await User.findOne({refreshToken : token});
-            if(user) {
-                user.refreshToken = null;
-                
-                await user.save();
-            }
-        }
+    if (token) {
+      const user = await User.findOne({ refreshToken: token });
+      if (user) {
+        user.refreshToken = null;
 
-        res.clearCookie("refreshToken");
-
-        return res.status(200).json({
-            message : "Logged out successfully"
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error:error.message
-        })
+        await user.save();
+      }
     }
-}
+
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
 
 export const googleCallback = async (req, res) => {
   try {
@@ -243,14 +243,12 @@ export const googleCallback = async (req, res) => {
     });
 
     return res.redirect(
-      `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`
+      `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`,
     );
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
-
-
 
 export const forgotPassword = async (req, res) => {
   try {
@@ -286,8 +284,7 @@ export const forgotPassword = async (req, res) => {
     await user.save();
 
     // 🔥 frontend reset link
-    const resetURL =
-      `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     const message = `
       <h2>Password Reset</h2>
@@ -302,14 +299,12 @@ export const forgotPassword = async (req, res) => {
     return res.status(200).json({
       message: "Password reset link sent",
     });
-
   } catch (error) {
     return res.status(500).json({
       error: error.message,
     });
   }
 };
-
 
 export const resetPassword = async (req, res) => {
   try {
@@ -330,10 +325,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // 🔥 hash incoming token
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
@@ -359,7 +351,6 @@ export const resetPassword = async (req, res) => {
     return res.status(200).json({
       message: "Password reset successful",
     });
-
   } catch (error) {
     return res.status(500).json({
       error: error.message,
@@ -392,34 +383,22 @@ export const resendOtp = async (req, res) => {
     }
 
     // 🔥 new OTP
-    const otp = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.otp = {
       code: otp,
-      expiresAt: new Date(
-        Date.now() + 5 * 60 * 1000
-      ),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     };
 
     await user.save();
 
-    const mailContent = setMailContent(
-      user.name,
-      otp
-    );
+    const mailContent = setMailContent(user.name, otp);
 
-    await sendMail(
-      email,
-      "Resend OTP Verification",
-      mailContent
-    );
+    await sendMail(email, "Resend OTP Verification", mailContent);
 
     return res.status(200).json({
       message: "OTP resent successfully",
     });
-
   } catch (error) {
     return res.status(500).json({
       error: error.message,

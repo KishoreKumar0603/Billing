@@ -90,6 +90,13 @@ const billSchema = new mongoose.Schema(
 
       trim: true,
     },
+    address : {
+      type: String,
+
+      required: true,
+      
+    }
+    ,
 
     // 👤 customer
     customer: {
@@ -165,6 +172,10 @@ const billSchema = new mongoose.Schema(
 
       default: "working",
 
+      index: true,
+    },
+    billNumber: {
+      type: String,
       index: true,
     },
 

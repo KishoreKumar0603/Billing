@@ -1,7 +1,4 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
 
 import { motion } from "framer-motion";
 
@@ -17,10 +14,7 @@ import {
 
 import { dashboardService } from "@/services/dashboard.service";
 
-import {
-  formatCurrency,
-  formatNumber,
-} from "@/lib/format";
+import { formatCurrency, formatNumber } from "@/lib/format";
 
 import { Shimmer } from "@/components/common/Skeleton";
 
@@ -33,8 +27,7 @@ const cards = [
     key: "totalOrders",
     label: "Total Orders",
     icon: FileText,
-    gradient:
-      "from-indigo-500 to-violet-500",
+    gradient: "from-indigo-500 to-violet-500",
     format: formatNumber,
   },
 
@@ -42,8 +35,7 @@ const cards = [
     key: "completedOrders",
     label: "Completed",
     icon: CheckCircle2,
-    gradient:
-      "from-emerald-500 to-teal-500",
+    gradient: "from-emerald-500 to-teal-500",
     format: formatNumber,
   },
 
@@ -51,8 +43,7 @@ const cards = [
     key: "workingOrders",
     label: "In Progress",
     icon: Clock,
-    gradient:
-      "from-amber-500 to-orange-500",
+    gradient: "from-amber-500 to-orange-500",
     format: formatNumber,
   },
 
@@ -60,8 +51,7 @@ const cards = [
     key: "totalRevenue",
     label: "Revenue",
     icon: Coins,
-    gradient:
-      "from-fuchsia-500 to-pink-500",
+    gradient: "from-fuchsia-500 to-pink-500",
     format: formatCurrency,
   },
 
@@ -69,8 +59,7 @@ const cards = [
     key: "pendingPayments",
     label: "Pending Payments",
     icon: Wallet,
-    gradient:
-      "from-rose-500 to-red-500",
+    gradient: "from-rose-500 to-red-500",
     format: formatCurrency,
   },
 
@@ -78,38 +67,24 @@ const cards = [
     key: "totalBusinessAmount",
     label: "Total Business",
     icon: TrendingUp,
-    gradient:
-      "from-sky-500 to-blue-500",
+    gradient: "from-sky-500 to-blue-500",
     format: formatCurrency,
   },
 ];
 
 export default function Dashboard() {
-  const [summary, setSummary] =
-    useState(null);
+  const [summary, setSummary] = useState(null);
 
-  const [orders, setOrders] =
-    useState([]);
+  const [orders, setOrders] = useState([]);
 
-  const [revenue, setRevenue] =
-    useState([]);
+  const [revenue, setRevenue] = useState([]);
 
   useEffect(() => {
-    dashboardService
-      .summary()
-      .then(setSummary);
+    dashboardService.summary().then(setSummary);
 
-    dashboardService
-      .orders("30days")
-      .then((r) =>
-        setOrders(r.analytics)
-      );
+    dashboardService.orders("30days").then((r) => setOrders(r.analytics));
 
-    dashboardService
-      .revenue("30days")
-      .then((r) =>
-        setRevenue(r.analytics)
-      );
+    dashboardService.revenue("30days").then((r) => setRevenue(r.analytics));
   }, []);
 
   return (
@@ -131,39 +106,27 @@ export default function Dashboard() {
           </h1>
 
           <p className="text-muted-foreground mt-1">
-            Here's what's happening
-            with your business
-            today.
+            Here's what's happening with your business today.
           </p>
         </div>
 
         {summary && (
           <div className="rounded-2xl border border-border bg-card p-4 shadow-card flex items-center gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">
-                Today
-              </p>
+              <p className="text-xs text-muted-foreground">Today</p>
 
               <p className="font-display font-bold text-xl">
-                {formatCurrency(
-                  summary.today
-                    .revenue
-                )}
+                {formatCurrency(summary.today.revenue)}
               </p>
             </div>
 
             <div className="h-10 w-px bg-border" />
 
             <div>
-              <p className="text-xs text-muted-foreground">
-                Orders
-              </p>
+              <p className="text-xs text-muted-foreground">Orders</p>
 
               <p className="font-display font-bold text-xl">
-                {
-                  summary.today
-                    .orders
-                }
+                {summary.today.orders}
               </p>
             </div>
           </div>
@@ -174,13 +137,7 @@ export default function Dashboard() {
         {cards.map((c, i) => {
           const Icon = c.icon;
 
-          const value =
-            summary
-              ? summary
-                  .overview[
-                  c.key
-                ]
-              : null;
+          const value = summary ? summary.overview[c.key] : null;
 
           return (
             <motion.div
@@ -194,8 +151,7 @@ export default function Dashboard() {
                 y: 0,
               }}
               transition={{
-                delay:
-                  i * 0.05,
+                delay: i * 0.05,
               }}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-card hover:shadow-elegant transition-all"
             >
@@ -213,18 +169,13 @@ export default function Dashboard() {
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4">
-                {c.label}
-              </p>
+              <p className="text-xs text-muted-foreground mt-4">{c.label}</p>
 
-              {value ===
-              null ? (
+              {value === null ? (
                 <Shimmer className="h-8 w-24 mt-1" />
               ) : (
                 <p className="font-display text-2xl font-bold mt-0.5">
-                  {c.format(
-                    value
-                  )}
+                  {c.format(value)}
                 </p>
               )}
             </motion.div>
@@ -236,14 +187,10 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-sm font-medium">
-                Orders — last
-                30 days
-              </p>
+              <p className="text-sm font-medium">Orders — last 30 days</p>
 
               <p className="text-xs text-muted-foreground">
-                Completed
-                orders trend
+                Completed orders trend
               </p>
             </div>
 
@@ -256,10 +203,7 @@ export default function Dashboard() {
           </div>
 
           {orders.length ? (
-            <AnalyticsChart
-              data={orders}
-              color="hsl(var(--primary))"
-            />
+            <AnalyticsChart data={orders} color="hsl(var(--primary))" />
           ) : (
             <Shimmer className="h-[280px]" />
           )}
@@ -268,14 +212,10 @@ export default function Dashboard() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-sm font-medium">
-                Revenue — last
-                30 days
-              </p>
+              <p className="text-sm font-medium">Revenue — last 30 days</p>
 
               <p className="text-xs text-muted-foreground">
-                Daily received
-                amount
+                Daily received amount
               </p>
             </div>
 
@@ -291,9 +231,7 @@ export default function Dashboard() {
             <AnalyticsChart
               data={revenue}
               color="hsl(var(--accent))"
-              formatter={(v) =>
-                formatCurrency(v)
-              }
+              formatter={(v) => formatCurrency(v)}
             />
           ) : (
             <Shimmer className="h-[280px]" />

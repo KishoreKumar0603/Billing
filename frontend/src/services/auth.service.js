@@ -1,42 +1,78 @@
-import { mockApi } from "./mockApi";
-import { tokenStore } from "./api";
+import { api, tokenStore } from "./api";
 
 export const authService = {
+  // REGISTER
   async register(body) {
-    return mockApi.register(body);
+    const { data } = await api.post("/auth/register", body);
+
+    return data;
   },
+
+  // VERIFY OTP
   async verifyOtp(body) {
-    const r = await mockApi.verifyOtp(body);
-    tokenStore.set(r.accessToken);
-    return r;
+    const { data } = await api.post("/auth/verify-otp", body);
+
+    if (data?.accessToken) {
+      tokenStore.set(data.accessToken);
+    }
+
+    return data;
   },
+
+  // RESEND OTP
   async resendOtp(body) {
-    return mockApi.resendOtp(body);
+    const { data } = await api.post("/auth/resend-otp", body);
+
+    return data;
   },
+
+  // LOGIN
   async login(body) {
-    const r = await mockApi.login(body);
-    tokenStore.set(r.accessToken);
-    return r;
+    const { data } = await api.post("/auth/login", body);
+
+    if (data?.accessToken) {
+      tokenStore.set(data.accessToken);
+    }
+
+    return data;
   },
-  async googleLogin() {
-    const r = await mockApi.login({ email: "google@billingit.app" });
-    tokenStore.set(r.accessToken);
-    return r;
-  },
+
+  // FORGOT PASSWORD
   async forgotPassword(body) {
-    return mockApi.forgotPassword(body);
+    const { data } = await api.post("/auth/forgot-password", body);
+
+    return data;
   },
-  async resetPassword(body) {
-    return mockApi.resetPassword(body);
+
+  // RESET PASSWORD
+  async resetPassword(token, body) {
+    const { data } = await api.post(`/auth/reset-password/${token}`, body);
+
+    return data;
   },
+
+  // GET PROFILE
   async me() {
-    return mockApi.me();
+    const { data } = await api.post("/user/profile/");
+
+    return data;
   },
-  async updateProfile(p) {
-    return mockApi.updateProfile(p);
+
+  // CHANGE PASSWORD
+  async changePassword(body) {
+    const { data } = await api.post("/user/change-password/", body);
+
+    return data;
   },
+
+  // LOGOUT
   async logout() {
-    await mockApi.logout();
     tokenStore.clear();
+
+    window.location.href = "/login";
+  },
+
+  googleLogin() {
+    window.location.href = process.env.VITE_API_BASE_URL + "/auth/google";
   },
 };

@@ -10,10 +10,7 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  motion,
-  AnimatePresence,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { Logo } from "@/components/common/Logo";
 
@@ -28,10 +25,8 @@ import { useNavigate } from "react-router-dom";
 const nav = [
   {
     to: "/app/dashboard",
-    icon:
-      LayoutDashboard,
-    label:
-      "Dashboard",
+    icon: LayoutDashboard,
+    label: "Dashboard",
   },
 
   {
@@ -41,140 +36,102 @@ const nav = [
   },
 
   {
-    to:
-      "/app/customers",
+    to: "/app/customers",
     icon: Users,
-    label:
-      "Customers",
+    label: "Customers",
   },
 
   {
-    to:
-      "/app/analytics",
-    icon:
-      BarChart3,
-    label:
-      "Analytics",
+    to: "/app/analytics",
+    icon: BarChart3,
+    label: "Analytics",
   },
 
   {
-    to:
-      "/app/settings",
+    to: "/app/settings",
     icon: Settings,
-    label:
-      "Settings",
+    label: "Settings",
   },
 ];
 
-export function Sidebar({
-  open,
-  onClose,
-}) {
-  const logout = useAuth(
-    (s) => s.logout
-  );
+export function Sidebar({ open, onClose }) {
+  const logout = useAuth((s) => s.logout);
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const handleLogout =
-    async () => {
-      await logout();
+  const handleLogout = async () => {
+    await logout();
 
-      toast.success(
-        "Signed out"
-      );
+    toast.success("Signed out");
 
-      navigate("/login");
-    };
+    navigate("/login");
+  };
 
   const content = (
     <aside className="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex items-center justify-between p-5">
         <Logo />
 
-        <button
-          onClick={onClose}
-          className="lg:hidden text-sidebar-foreground"
-        >
+        <button onClick={onClose} className="lg:hidden text-sidebar-foreground hover:cursor-pointer">
           <X className="h-5 w-5" />
         </button>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {nav.map(
-          (item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={
-                onClose
-              }
-              className={({
-                isActive,
-              }) =>
-                cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+        {nav.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            onClick={onClose}
+            className={({ isActive }) =>
+              cn(
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
 
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              {({
-                isActive,
-              }) => (
-                <>
-                  <span
-                    className={cn(
-                      "grid h-8 w-8 place-items-center rounded-lg transition-all",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={cn(
+                    "grid h-8 w-8 place-items-center rounded-lg transition-all",
 
-                      isActive
-                        ? "bg-gradient-primary text-primary-foreground shadow-elegant"
-                        : "bg-transparent"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                  </span>
-
-                  <span>
-                    {
-                      item.label
-                    }
-                  </span>
-
-                  {isActive && (
-                    <motion.span
-                      layoutId="dot"
-                      className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
-                    />
+                    isActive
+                      ? "bg-gradient-primary text-primary-foreground shadow-elegant"
+                      : "bg-transparent",
                   )}
-                </>
-              )}
-            </NavLink>
-          )
-        )}
+                >
+                  <item.icon className="h-4 w-4" />
+                </span>
+
+                <span>{item.label}</span>
+
+                {isActive && (
+                  <motion.span
+                    layoutId="dot"
+                    className="ml-auto h-1.5 w-1.5 rounded-full bg-primary"
+                  />
+                )}
+              </>
+            )}
+          </NavLink>
+        ))}
       </nav>
 
       <div className="p-3">
         <div className="mb-2 rounded-xl bg-gradient-soft p-4">
-          <p className="text-xs font-medium text-foreground">
-            Need help?
-          </p>
+          <p className="text-xs font-medium text-foreground">Need help?</p>
 
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Contact
-            support
-            anytime for
-            assistance.
+            Contact support anytime for assistance.
           </p>
         </div>
 
         <button
-          onClick={
-            handleLogout
-          }
+          onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
           <LogOut className="h-4 w-4" />
@@ -186,9 +143,7 @@ export function Sidebar({
 
   return (
     <>
-      <div className="hidden lg:block">
-        {content}
-      </div>
+      <div className="hidden lg:block">{content}</div>
 
       <AnimatePresence>
         {open && (
@@ -203,9 +158,7 @@ export function Sidebar({
               exit={{
                 opacity: 0,
               }}
-              onClick={
-                onClose
-              }
+              onClick={onClose}
               className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm lg:hidden"
             />
 
@@ -220,8 +173,7 @@ export function Sidebar({
                 x: -300,
               }}
               transition={{
-                type:
-                  "spring",
+                type: "spring",
                 damping: 25,
               }}
               className="fixed inset-y-0 left-0 z-50 lg:hidden"

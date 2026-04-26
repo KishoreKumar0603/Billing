@@ -4,12 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { z } from "zod";
 
-import {
-  Moon,
-  Sun,
-  LogOut,
-  Loader2,
-} from "lucide-react";
+import { Moon, Sun, LogOut, Loader2 } from "lucide-react";
 
 import { useAuth } from "@/stores/auth.store";
 
@@ -21,81 +16,51 @@ import { Button } from "@/components/ui/button";
 
 import { Switch } from "@/components/ui/switch";
 
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { toast } from "sonner";
 
 import { useNavigate } from "react-router-dom";
 
 const schema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2)
-    .max(80),
+  name: z.string().trim().min(2).max(80),
 
-  email: z
-    .string()
-    .trim()
-    .email(),
+  email: z.string().trim().email(),
 
-  phone: z
-    .string()
-    .trim()
-    .max(20)
-    .optional(),
+  phone: z.string().trim().max(20).optional(),
 });
 
 export default function Settings() {
-  const {
-    user,
-    updateProfile,
-    logout,
-    theme,
-    setTheme,
-  } = useAuth();
+  const { user, updateProfile, logout, theme, setTheme } = useAuth();
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
+
+  console.log("User : " + user); // Debugging
 
   const {
     register,
     handleSubmit,
 
-    formState: {
-      errors,
-      isSubmitting,
-    },
+    formState: { errors, isSubmitting },
   } = useForm({
-    resolver:
-      zodResolver(schema),
+    resolver: zodResolver(schema),
 
     defaultValues: {
-      name: user?.name,
+      name: user?.name || "user name",
 
-      email: user?.email,
+      email: user?.email || "user email",
 
-      phone:
-        user?.phone || "",
+      phone: user?.phone || "user phone",
     },
   });
 
-  const onSubmit = async (
-    v
-  ) => {
+  const onSubmit = async (v) => {
     try {
       await updateProfile(v);
 
-      toast.success(
-        "Profile updated"
-      );
+      toast.success("Profile updated");
     } catch {
-      toast.error(
-        "Failed to update"
-      );
+      toast.error("Failed to update");
     }
   };
 
@@ -107,8 +72,7 @@ export default function Settings() {
         </h1>
 
         <p className="text-muted-foreground mt-1">
-          Manage your profile and
-          preferences.
+          Manage your profile and preferences.
         </p>
       </div>
 
@@ -116,46 +80,29 @@ export default function Settings() {
         <div className="flex items-center gap-4 mb-6">
           <Avatar className="h-16 w-16">
             <AvatarFallback className="bg-gradient-primary text-primary-foreground font-display text-xl font-bold">
-              {user?.name?.[0]?.toUpperCase() ||
-                "U"}
+              {user?.name?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
 
           <div>
-            <p className="font-display font-bold text-lg">
-              {user?.name}
-            </p>
+            <p className="font-display font-bold text-lg">{user?.name}</p>
 
-            <p className="text-sm text-muted-foreground">
-              {user?.email}
-            </p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </div>
 
         <form
-          onSubmit={handleSubmit(
-            onSubmit
-          )}
+          onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <div>
-            <Label>
-              Full name
-            </Label>
+            <Label>Full name</Label>
 
-            <Input
-              {...register(
-                "name"
-              )}
-              className="mt-1.5 h-11"
-            />
+            <Input {...register("name")} className="mt-1.5 h-11" />
 
             {errors.name && (
               <p className="text-xs text-destructive mt-1">
-                {
-                  errors.name
-                    .message
-                }
+                {errors.name.message}
               </p>
             )}
           </div>
@@ -165,18 +112,13 @@ export default function Settings() {
 
             <Input
               type="email"
-              {...register(
-                "email"
-              )}
+              {...register("email")}
               className="mt-1.5 h-11"
             />
 
             {errors.email && (
               <p className="text-xs text-destructive mt-1">
-                {
-                  errors.email
-                    .message
-                }
+                {errors.email.message}
               </p>
             )}
           </div>
@@ -184,19 +126,12 @@ export default function Settings() {
           <div>
             <Label>Phone</Label>
 
-            <Input
-              {...register(
-                "phone"
-              )}
-              className="mt-1.5 h-11"
-            />
+            <Input {...register("phone")} className="mt-1.5 h-11" />
           </div>
 
           <div className="md:col-span-2 flex justify-end">
             <Button
-              disabled={
-                isSubmitting
-              }
+              disabled={isSubmitting}
               className="bg-gradient-primary shadow-elegant"
             >
               {isSubmitting ? (
@@ -210,15 +145,12 @@ export default function Settings() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-card p-6 space-y-4">
-        <p className="font-medium">
-          Preferences
-        </p>
+        <p className="font-medium">Preferences</p>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-soft text-primary">
-              {theme ===
-              "dark" ? (
+              {theme === "dark" ? (
                 <Moon className="h-4 w-4" />
               ) : (
                 <Sun className="h-4 w-4" />
@@ -226,43 +158,26 @@ export default function Settings() {
             </div>
 
             <div>
-              <p className="text-sm font-medium">
-                Dark mode
-              </p>
+              <p className="text-sm font-medium">Dark mode</p>
 
               <p className="text-xs text-muted-foreground">
-                Toggle between
-                light and dark
-                themes.
+                Toggle between light and dark themes.
               </p>
             </div>
           </div>
 
           <Switch
-            checked={
-              theme === "dark"
-            }
-            onCheckedChange={(
-              c
-            ) =>
-              setTheme(
-                c
-                  ? "dark"
-                  : "light"
-              )
-            }
+            checked={theme === "dark"}
+            onCheckedChange={(c) => setTheme(c ? "dark" : "light")}
           />
         </div>
       </div>
 
       <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6">
-        <p className="font-medium">
-          Sign out
-        </p>
+        <p className="font-medium">Sign out</p>
 
         <p className="text-sm text-muted-foreground mt-1">
-          End your current
-          session.
+          End your current session.
         </p>
 
         <Button
@@ -271,9 +186,7 @@ export default function Settings() {
           onClick={async () => {
             await logout();
 
-            toast.success(
-              "Signed out"
-            );
+            toast.success("Signed out");
 
             navigate("/login");
           }}

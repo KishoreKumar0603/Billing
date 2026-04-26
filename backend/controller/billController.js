@@ -179,7 +179,7 @@ export const createBill = async (req, res) => {
 
           customer,
 
-          lotNumber: lotNumber.trim().toUpperCase(),
+          lotNumber: `LOT-${lotNumber.trim()}`,
 
           vehicleNumber: vehicleNumber?.trim()?.toUpperCase() || "",
 
@@ -187,7 +187,7 @@ export const createBill = async (req, res) => {
 
           toName: existingCustomer.name,
 
-          address: address || existingCustomer.address,
+          address: address,
 
           rows: processedRows,
 
@@ -202,6 +202,7 @@ export const createBill = async (req, res) => {
           paymentStatus: paymentData.paymentStatus,
 
           status,
+          billNumber:lotNumber.trim() + new Date().getDate() + new Date().getMinutes(),
 
           notes: notes?.trim() || "",
         },
@@ -361,15 +362,10 @@ export const getBills = async (req, res) => {
     // ==================================================
 
     const bills = await Bill.find(query)
-
       .populate("customer", "name phone")
-
       .sort(sortOptions)
-
       .skip(skip)
-
       .limit(limit)
-
       .lean();
 
     const totalBills = await Bill.countDocuments(query);
@@ -401,8 +397,10 @@ export const getBills = async (req, res) => {
 // ======================================================
 // GET SINGLE BILL
 // ======================================================
-
-export const getSingleBill = async (req, res) => {
+export const getSingleBill = async (
+  req,
+  res,
+) => {
   try {
     const { id } = req.params;
 
@@ -416,7 +414,10 @@ export const getSingleBill = async (req, res) => {
       _id: id,
 
       user: req.user._id,
-    });
+    }).populate(
+      "customer",
+      "name phone address"
+    );
 
     if (!bill) {
       return res.status(404).json({
@@ -481,7 +482,7 @@ export const updateBill = async (req, res) => {
     // ================= UPDATE =================
 
     existingBill.lotNumber =
-      lotNumber?.trim()?.toUpperCase() || existingBill.lotNumber;
+      `LOT-${lotNumber.trim()}` || existingBill.lotNumber;
 
     existingBill.vehicleNumber = vehicleNumber?.trim()?.toUpperCase() || "";
 

@@ -39,7 +39,6 @@ export const createCustomer = async (req, res) => {
 
     return res.status(201).json({
       message: "Customer created successfully",
-
       customer,
     });
   } catch (error) {
