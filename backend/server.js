@@ -5,20 +5,24 @@ import userRoutes from "./routes/userRoutes.js";
 import billRoutes from "./routes/billRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { protect } from "./middleware/authMiddleware.js";
+import passport from "./config/passport.js"
 dotenv.config();
 
-const alllowedOrigin = ["http://localhost:5173"];
 
 const app = express();
+
+app.use(cookieParser());
 app.use(express.json());
+app.use(passport.initialize());
+
 app.use(
   cors({
-    origin: alllowedOrigin,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: process.env.CLIENT_URL,
     credentials: true,
   }),
 );

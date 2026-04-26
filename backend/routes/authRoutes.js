@@ -2,6 +2,7 @@ import express from "express";
 import {
   forgotPassword,
   login,
+  logout,
   refreshToken,
   registerUser,
   resendOtp,
@@ -19,6 +20,7 @@ router.post("/login", authLimiter, login);
 router.post("/register", registerUser);
 router.post("/verify-otp", verifyOtp);
 router.post("/forgot-password", forgotPassword);
+router.post("/logout", logout);
 
 router.post("/refresh-token", protect, refreshToken);
 

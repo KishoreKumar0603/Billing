@@ -67,9 +67,8 @@ export const authService = {
 
   // LOGOUT
   async logout() {
+    await api.post("/auth/logout");
     tokenStore.clear();
-
-    window.location.href = "/login";
   },
 
   googleLogin() {

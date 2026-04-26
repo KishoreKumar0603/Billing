@@ -19,7 +19,7 @@ export const useAuth = create()(
           set({
             isAuthenticated: false,
             user: null,
-            authChecking: true,
+            authChecking: false,
           });
 
           return;
