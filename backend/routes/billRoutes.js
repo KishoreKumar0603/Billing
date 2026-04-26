@@ -1,12 +1,34 @@
-import express from 'express';
-import { addBill,deleteBill,getAllBills, updateBill } from '../controller/billContoller.js';
+import express from "express";
 
+import {
+  createBill,
+  getBills,
+  getSingleBill,
+  updateBill,
+  deleteBill,
+} from "../controller/billController.js";
 
-const route = express.Router();
+import { protect } from "../middleware/authMiddleware.js";
+import { generateBillPDF } from "../controller/pdfController.js";
 
-route.get('/', getAllBills);
-route.post('/add/', addBill);
-route.post('/update/', updateBill);
-route.post('/delete/', deleteBill);
+const router = express.Router();
 
-export default route;
+// CREATE
+router.post("/", protect, createBill);
+
+// GET ALL
+router.get("/", protect, getBills);
+
+// GET SINGLE
+router.get("/:id", protect, getSingleBill);
+
+// UPDATE
+router.put("/:id", protect, updateBill);
+
+// DELETE
+router.delete("/:id", protect, deleteBill);
+
+//Generate Pdf
+router.get("/:id/pdf", protect, generateBillPDF);
+
+export default router;

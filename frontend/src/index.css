@@ -1,21 +1,265 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Itim&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&family=Sen:wght@400..800&display=swap");
+@import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-  font-style: normal;
+:root {
+  --background: 220 33% 98%;
+  --foreground: 234 32% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 234 32% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 234 32% 12%;
+
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+  --primary-glow: 258 90% 66%;
+
+  --secondary: 220 20% 96%;
+  --secondary-foreground: 234 32% 12%;
+
+  --muted: 220 20% 96%;
+  --muted-foreground: 234 10% 46%;
+
+  --accent: 258 90% 66%;
+  --accent-foreground: 0 0% 100%;
+
+  --success: 152 72% 40%;
+  --warning: 38 92% 50%;
+  --destructive: 0 84% 60%;
+
+  --border: 220 20% 90%;
+  --input: 220 20% 92%;
+  --ring: 243 75% 59%;
+
+  --radius: 0.85rem;
+
+  --gradient-primary: linear-gradient(
+    135deg,
+    hsl(243 75% 59%),
+    hsl(258 90% 66%)
+  );
+
+  --gradient-soft: linear-gradient(
+    135deg,
+    hsl(243 75% 59% / 0.08),
+    hsl(258 90% 66% / 0.08)
+  );
+
+  --gradient-hero:
+    radial-gradient(
+      circle at 20% 10%,
+      hsl(258 90% 66% / 0.35),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      hsl(243 75% 59% / 0.35),
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      hsl(234 40% 8%),
+      hsl(243 40% 14%)
+    );
+
+  --shadow-elegant:
+    0 10px 40px -12px
+    hsl(243 75% 59% / 0.25);
+
+  --shadow-card:
+    0 1px 2px hsl(234 32% 12% / 0.04),
+    0 4px 16px -4px hsl(234 32% 12% / 0.06);
 }
 
+.dark {
+  --background: 234 32% 7%;
+  --foreground: 220 20% 96%;
 
-:root{
+  --card: 234 30% 10%;
+  --card-foreground: 220 20% 96%;
 
-    --secondary-link-color: #797979;
+  --popover: 234 30% 10%;
+  --popover-foreground: 220 20% 96%;
+
+  --primary: 250 90% 70%;
+  --primary-foreground: 234 32% 7%;
+
+  --secondary: 234 25% 14%;
+  --secondary-foreground: 220 20% 96%;
+
+  --muted: 234 25% 14%;
+  --muted-foreground: 234 15% 65%;
+
+  --accent: 268 90% 72%;
+
+  --border: 234 20% 18%;
+  --input: 234 20% 18%;
+}
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+
+  /* ADD THESE */
+
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-destructive: hsl(var(--destructive));
+
+  --radius-lg: var(--radius);
 }
 
-.second-font{
-    color: var(--secondary-link-color) !important;
-    font-size: 14px !important;
-    text-decoration: none;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+
+    font-family: Inter, sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    font-feature-settings:
+      "cv02",
+      "cv03",
+      "cv04",
+      "cv11";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family:
+      "Space Grotesk",
+      Inter,
+      sans-serif;
+
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility glass {
+  background: hsl(var(--card) / 0.7);
+
+  backdrop-filter:
+    blur(14px)
+    saturate(180%);
+
+  border: 1px solid
+    hsl(var(--border) / 0.6);
+}
+
+@utility gradient-text {
+  background: var(--gradient-primary);
+
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  color: transparent;
+}
+
+@utility bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+@utility bg-gradient-soft {
+  background: var(--gradient-soft);
+}
+
+@utility bg-gradient-hero {
+  background: var(--gradient-hero);
+}
+
+@utility shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px
+      hsl(var(--primary) / 0.3);
+  }
+
+  50% {
+    box-shadow:
+      0 0 40px
+      hsl(var(--primary) / 0.6);
+  }
+}
+
+@utility animate-float {
+  animation:
+    float 6s ease-in-out infinite;
+}
+
+@utility animate-shimmer {
+  animation:
+    shimmer 2s linear infinite;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--muted)),
+      transparent
+    );
+
+  background-size:
+    1000px 100%;
+}
+
+@utility animate-pulse-glow {
+  animation:
+    pulse-glow 3s ease-in-out infinite;
 }
