@@ -35,8 +35,6 @@ export default function Settings() {
 
   const navigate = useNavigate();
 
-  console.log("User : " + user); // Debugging
-
   const {
     register,
     handleSubmit,
