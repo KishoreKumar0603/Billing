@@ -239,12 +239,12 @@ export const googleCallback = async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "none",
     });
 
     return res.redirect(
-      `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`,
-    );
+  `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`,
+);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
