@@ -12,6 +12,7 @@ import Register from "@/pages/auth/Register";
 import VerifyOtp from "@/pages/auth/VerifyOtp";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
+import AuthSuccess from "./pages/auth/AuthSuccess";
 
 import Dashboard from "@/pages/app/Dashboard";
 import Bills from "@/pages/app/Bills";
@@ -41,6 +42,7 @@ const App = () => {
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth/success" element={<AuthSuccess />} />
             <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token?" element={<ResetPassword />} />

@@ -53,7 +53,7 @@ export const authService = {
 
   // GET PROFILE
   async me() {
-    const { data } = await api.post("/user/profile/");
+    const { data } = await api.get("/user/profile/");
 
     return data;
   },
@@ -72,6 +72,6 @@ export const authService = {
   },
 
   googleLogin() {
-    window.location.href = process.env.VITE_API_BASE_URL + "/auth/google";
+    window.location.href = import.meta.env.VITE_API_BASE_URL + "/api/auth/google";
   },
 };
