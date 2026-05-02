@@ -38,6 +38,7 @@ export const registerUser = async (req, res) => {
     const isExistingUser = await User.findOne({ email });
     if (isExistingUser) {
       return res.status(400).json({
+        code: "USER_ALREADY_EXISTS",
         error: "User Already Exists... try different mail Id",
       });
     }
@@ -111,38 +112,59 @@ export const login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        error: "Both  Fields Required",
+        error: "Both fields required",
       });
     }
 
     const user = await User.findOne({ email }).select("+password");
+
     if (!user) {
       return res.status(404).json({
         error: "Invalid Credentials",
       });
     }
-    if (!user.isVerified) {
+
+    // check password first
+    if (!(await user.matchPassword(password))) {
+      user.loginAttempts += 1;
+
+      if (user.loginAttempts >= 5) {
+        user.lockUntil = Date.now() + 15 * 60 * 1000;
+      }
+
+      await user.save();
+
       return res.status(400).json({
-        error: "Account Not Verified... Please Verify Your Account",
+        error: "Invalid Credentials",
+      });
+    }
+
+    // account not verified
+    if (!user.isVerified) {
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+      user.otp = {
+        code: otp,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+      };
+
+      await user.save();
+
+      await sendMail(user.email, "Verify Your Account", otp);
+
+      return res.status(200).json({
+        requiresVerification: true,
+        email: user.email,
+        message: "OTP sent to email",
       });
     }
 
     if (user.isLocked()) {
       return res.status(403).json({
-        error: "Account Locked , Try after sometimes",
+        error: "Account Locked, Try later",
       });
     }
 
-    if (!(await user.matchPassword(password))) {
-      user.loginAttempts += 1;
-      if (user.loginAttempts >= 5) {
-        user.lockUntil = Date.now() + 15 * 60 * 1000;
-      }
-      await user.save();
-      return res.status(400).json({
-        error: "Invalid Credentials...",
-      });
-    }
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
@@ -150,6 +172,7 @@ export const login = async (req, res) => {
     user.loginAttempts = 0;
     user.lockUntil = undefined;
     user.lastLogin = new Date();
+
     await user.save();
 
     res.cookie("refreshToken", refreshToken, {
@@ -158,6 +181,7 @@ export const login = async (req, res) => {
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
     const safeUser = await User.findById(user._id).select(
       "-password -refreshToken",
     );
@@ -168,7 +192,9 @@ export const login = async (req, res) => {
       user: safeUser,
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 };
 
@@ -243,8 +269,8 @@ export const googleCallback = async (req, res) => {
     });
 
     return res.redirect(
-  `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`,
-);
+      `${process.env.CLIENT_URL}/auth/success?token=${accessToken}`,
+    );
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

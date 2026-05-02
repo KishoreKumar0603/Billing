@@ -67,8 +67,14 @@ export default function Register() {
       toast.success("OTP sent to your email");
 
       navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
-    } catch {
-      toast.error("Registration failed");
+    } catch (err) {
+      const errorCode = err.response?.data?.code;
+
+      if (errorCode === "USER_ALREADY_EXISTS") {
+        toast.error("User Already Exists Try Login");
+      } else {
+        toast.error("Registration failed");
+      }
     } finally {
       setLoading(false);
     }
