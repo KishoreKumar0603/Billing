@@ -383,7 +383,7 @@ export const resendOtp = async (req, res) => {
     }
 
     // 🔥 new OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     user.otp = {
       code: otp,
