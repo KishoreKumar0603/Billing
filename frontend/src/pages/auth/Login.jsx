@@ -46,13 +46,23 @@ export default function Login() {
 
   const onSubmit = async (values) => {
     try {
-      await login(values.email, values.password);
+      const res = await login(values.email, values.password);
 
+      // user needs verification
+      if (res.requiresVerification) {
+        toast.success("OTP sent to your email");
+
+        navigate(`/verify-otp?email=${res.email}`);
+
+        return;
+      }
+
+      // verified login
       toast.success("Welcome back!");
 
       navigate("/app/dashboard");
     } catch {
-      toast.error("Invalid credentials");
+      toast.error(err?.response?.data?.error || "Something went wrong");
     }
   };
 

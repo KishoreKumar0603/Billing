@@ -54,10 +54,13 @@ export const useAuth = create()(
             password,
           });
 
-          set({
-            user: r.user,
-            isAuthenticated: true,
-          });
+          // verified user
+          if (r.accessToken) {
+            set({
+              user: r.user,
+              isAuthenticated: true,
+            });
+          }
 
           return r;
         } finally {
@@ -87,17 +90,17 @@ export const useAuth = create()(
 
       // VERIFY OTP
       verifyOtp: async (email, otp) => {
-        await authService.verifyOtp({
+        const data = await authService.verifyOtp({
           email,
           otp,
         });
 
-        const me = await authService.me();
-
         set({
-          user: me,
+          user: data.user,
           isAuthenticated: true,
         });
+
+        return data;
       },
 
       // UPDATE PROFILE
