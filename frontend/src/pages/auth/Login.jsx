@@ -61,7 +61,7 @@ export default function Login() {
       toast.success("Welcome back!");
 
       navigate("/app/dashboard");
-    } catch {
+    } catch (err) {
       toast.error(err?.response?.data?.error || "Something went wrong");
     }
   };
