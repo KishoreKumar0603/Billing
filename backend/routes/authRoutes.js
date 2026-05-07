@@ -22,7 +22,7 @@ router.post("/verify-otp", verifyOtp);
 router.post("/forgot-password", forgotPassword);
 router.post("/logout", logout);
 
-router.post("/refresh-token", protect, refreshToken);
+router.post("/refresh-token", refreshToken);
 
 router.post("/reset-password/:token", resetPassword);
 
