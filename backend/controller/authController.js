@@ -55,7 +55,7 @@ export const registerUser = async (req, res) => {
         expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins
       },
     });
-    const mailContent = setMailContent(name, otp);
+    const mailContent = setMailContent(name, otp, "verification");
 
     await sendMail(email, "Billing - Verify your account", mailContent);
     return res.status(201).json({
@@ -150,7 +150,8 @@ export const login = async (req, res) => {
 
       await user.save();
 
-      await sendMail(user.email, "Verify Your Account", otp);
+      const mailContent = setMailContent(user.name, otp, "otp");
+      await sendMail(user.email, "Verify Your Account", mailContent);
 
       return res.status(200).json({
         requiresVerification: true,
@@ -418,7 +419,7 @@ export const resendOtp = async (req, res) => {
 
     await user.save();
 
-    const mailContent = setMailContent(user.name, otp);
+    const mailContent = setMailContent(user.name, otp, "resend");
 
     await sendMail(email, "Resend OTP Verification", mailContent);
 
