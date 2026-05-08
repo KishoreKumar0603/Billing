@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/stores/auth.store";
+import { useAuthInit } from "@/hooks/useAuthInit";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AppShell } from "@/components/layout/AppShell";
 
@@ -28,6 +28,46 @@ import { Calendar } from "./components/ui/calendar";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  // Initialize authentication on app load
+  useAuthInit();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/auth/success" element={<AuthSuccess />} />
+      <Route path="/verify-otp" element={<VerifyOtp />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token?" element={<ResetPassword />} />
+
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            {" "}
+            <AppShell />{" "}
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="bills" element={<Bills />} />
+        <Route path="bills/new" element={<CreateBill />} />
+        <Route path="bills/:id" element={<BillDetails />} />
+        <Route path="bills/:id/edit" element={<EditBill />} />
+        <Route path="customers" element={<Customers />} />
+        <Route path="customers/:id" element={<CustomerDetails />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -35,33 +75,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={<Navigate to="/app/dashboard" replace />}
-            />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth/success" element={<AuthSuccess />} />
-            <Route path="/verify-otp" element={<VerifyOtp />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token?" element={<ResetPassword />} />
-
-            <Route path="/app" element={ <ProtectedRoute> <AppShell /> </ProtectedRoute> }>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="bills" element={<Bills />} />
-              <Route path="bills/new" element={<CreateBill />} />
-              <Route path="bills/:id" element={<BillDetails />} />
-              <Route path="bills/:id/edit" element={<EditBill />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="customers/:id" element={<CustomerDetails />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

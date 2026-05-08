@@ -1,84 +1,132 @@
 import axios from "axios";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL+"/api"
+const API_BASE = import.meta.env.VITE_API_BASE_URL + "/api";
 
 export const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,
+  withCredentials: true, // ✅ Enable cookies for refresh token
 });
 
 const TOKEN_KEY = "billingit_access_token";
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
-
   set: (token) => localStorage.setItem(TOKEN_KEY, token),
-
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
-// Attach token automatically
-api.interceptors.request.use((config) => {
-  const token = tokenStore.get();
+// 🔐 Token refresh state management
+let refreshPromise = null;
+let failedQueue = [];
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
 
-  return config;
-});
-
-// Refresh token logic
-let refreshing = null;
-
-async function refreshToken() {
+async function refreshAccessToken() {
   try {
-    const { data } = await api.post("/auth/refresh-token");
+    // Create a new instance to avoid interceptor loops
+    const refreshInstance = axios.create({
+      baseURL: API_BASE,
+      withCredentials: true,
+    });
 
-    if (data?.accessToken) {
-      tokenStore.set(data.accessToken);
-      return data.accessToken;
+    const response = await refreshInstance.post("/auth/refresh-token");
+
+    if (response?.data?.accessToken) {
+      const newToken = response.data.accessToken;
+      tokenStore.set(newToken);
+      return newToken;
     }
 
-    return null;
-  } catch (err) {
+    throw new Error("No access token in refresh response");
+  } catch (error) {
+    console.error("❌ Token refresh failed:", error.response?.status);
+
+    // If refresh fails, clear tokens and redirect to login
+    tokenStore.clear();
+
+    // Force navigation to login
+    if (
+      typeof window !== "undefined" &&
+      !window.location.pathname.includes("/login")
+    ) {
+      window.location.href = "/login?session_expired=true";
+    }
+
     return null;
   }
 }
 
-// Auto retry on 401
+// ✅ REQUEST INTERCEPTOR: Add access token to headers
+api.interceptors.request.use(
+  (config) => {
+    const token = tokenStore.get();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
+// ✅ RESPONSE INTERCEPTOR: Handle 401 and refresh token
 api.interceptors.response.use(
   (response) => response,
-
   async (error) => {
     const originalRequest = error.config;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
+    // Only handle 401 errors and skip retry attempts
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      refreshing = refreshing || refreshToken();
-
-      const newToken = await refreshing;
-
-      refreshing = null;
-
-      if (newToken) {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-        return api(originalRequest);
+      // If already refreshing, queue the request
+      if (refreshPromise) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
-      tokenStore.clear();
+      // Start refresh process
+      refreshPromise = refreshAccessToken();
 
-      if (!location.pathname.startsWith("/login")) {
-        location.href = "/login";
+      try {
+        const newToken = await refreshPromise;
+
+        if (newToken) {
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          processQueue(null, newToken);
+          return api(originalRequest);
+        } else {
+          // Refresh failed
+          processQueue(new Error("Token refresh failed"), null);
+          return Promise.reject(error);
+        }
+      } catch (err) {
+        processQueue(err, null);
+        return Promise.reject(err);
+      } finally {
+        refreshPromise = null;
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
