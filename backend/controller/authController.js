@@ -93,11 +93,36 @@ export const verifyOtp = async (req, res) => {
         error: "Invalid Otp",
       });
     }
+
+    // ✅ Generate tokens on OTP verification
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
     user.isVerified = true;
     user.otp = undefined;
+    user.refreshToken = refreshToken;
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    user.lastLogin = new Date();
+
     await user.save();
+
+    // ✅ Set refresh token in httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const safeUser = await User.findById(user._id).select(
+      "-password -refreshToken",
+    );
+
     return res.status(200).json({
       message: "Account Verified Successfully",
+      accessToken,
+      user: safeUser,
     });
   } catch (error) {
     return res.status(500).json({
@@ -179,7 +204,7 @@ export const login = async (req, res) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -203,27 +228,73 @@ export const refreshToken = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;
 
+    // ✅ Check if refresh token exists
     if (!token) {
       return res.status(401).json({
-        error: "No refresh token",
+        error: "No refresh token provided",
+        code: "NO_REFRESH_TOKEN",
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    // ✅ Verify the token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    } catch (verifyError) {
+      if (verifyError.name === "TokenExpiredError") {
+        return res.status(401).json({
+          error: "Refresh token expired",
+          code: "REFRESH_TOKEN_EXPIRED",
+        });
+      }
+      return res.status(401).json({
+        error: "Invalid refresh token",
+        code: "INVALID_REFRESH_TOKEN",
+      });
+    }
 
+    // ✅ Find user
     const user = await User.findById(decoded.id);
-    if (!user || user.refreshToken !== token) {
+    if (!user) {
       return res.status(403).json({
-        error: "Invalid token",
+        error: "User not found",
+        code: "USER_NOT_FOUND",
       });
     }
 
-    const newAccessToken = generateAccessToken(user);
+    // ✅ Verify the token in DB matches (token rotation security)
+    if (user.refreshToken !== token) {
+      return res.status(403).json({
+        error: "Invalid refresh token - token mismatch",
+        code: "TOKEN_MISMATCH",
+      });
+    }
 
-    return res.status(200).json({ accessToken: newAccessToken });
+    // ✅ Generate new tokens (token rotation)
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    // ✅ Update refresh token in database
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    // ✅ Set new refresh token in httpOnly cookie
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      message: "Token refreshed successfully",
+    });
   } catch (error) {
+    console.error("🔴 Refresh Token Error:", error.message);
     return res.status(500).json({
-      error: error.message,
+      error: "Token refresh failed",
+      code: "REFRESH_ERROR",
     });
   }
 };
