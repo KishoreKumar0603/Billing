@@ -77,7 +77,7 @@ export default function Bills() {
         paymentStatus: paymentStatus === "all" ? undefined : paymentStatus,
       })
       .then((r) => {
-        setData(r)
+        setData(r);
       });
   };
 
@@ -358,7 +358,11 @@ export default function Bills() {
 
       <AlertDialog
         open={!!toDelete}
-        onOpenChange={(o) => !o && setToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setToDelete(null);
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
