@@ -1,5 +1,39 @@
 import mongoose from "mongoose";
 
+// ================= PAYMENT SCHEMA =================
+
+const paymentSchema = new mongoose.Schema(
+  {
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    paymentDate: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "check", "bank_transfer", "upi", "card", "other"],
+      default: "cash",
+    },
+    reference: {
+      type: String,
+      trim: true,
+    },
+    notes: {
+      type: String,
+      maxlength: 200,
+    },
+  },
+  {
+    _id: true,
+    timestamps: true,
+  },
+);
+
 // ================= ROW SCHEMA =================
 
 const rowSchema = new mongoose.Schema(
@@ -90,14 +124,11 @@ const billSchema = new mongoose.Schema(
 
       trim: true,
     },
-    address : {
+    address: {
       type: String,
 
       required: true,
-      
-    }
-    ,
-
+    },
     // 👤 customer
     customer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -155,6 +186,12 @@ const billSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // 💳 PAYMENTS HISTORY (Production-level tracking)
+    payments: {
+      type: [paymentSchema],
+      default: [],
+    },
+
     // 💳 BALANCE
     balanceAmount: {
       type: Number,
@@ -200,6 +237,42 @@ const billSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// ================= METHODS =================
+
+// Calculate total received amount from all payments
+billSchema.methods.calculateTotalReceived = function () {
+  return this.payments.reduce(
+    (total, payment) => total + (payment.amount || 0),
+    0,
+  );
+};
+
+// Calculate balance amount
+billSchema.methods.calculateBalance = function () {
+  const totalReceived = this.calculateTotalReceived();
+  return Math.max(0, this.totalAmount - totalReceived);
+};
+
+// Determine payment status
+billSchema.methods.updatePaymentStatus = function () {
+  const totalReceived = this.calculateTotalReceived();
+
+  if (totalReceived <= 0) {
+    this.paymentStatus = "not_received";
+  } else if (totalReceived >= this.totalAmount) {
+    this.paymentStatus = "received";
+  } else {
+    this.paymentStatus = "partially";
+  }
+};
+
+// Update all payment-related fields
+billSchema.methods.syncPaymentFields = function () {
+  this.receivedAmount = this.calculateTotalReceived();
+  this.balanceAmount = this.calculateBalance();
+  this.updatePaymentStatus();
+};
 
 // ================= INDEXES =================
 

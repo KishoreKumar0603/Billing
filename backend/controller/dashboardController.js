@@ -120,7 +120,7 @@ export const getOrderAnalytics = async (req, res) => {
 };
 
 // ======================================================
-// REVENUE ANALYTICS
+// REVENUE ANALYTICS (Production-level with payment dates)
 // ======================================================
 
 export const getRevenueAnalytics = async (req, res) => {
@@ -129,35 +129,42 @@ export const getRevenueAnalytics = async (req, res) => {
 
     const startDate = getDateRange(range);
 
+    // Unwind payments to get individual payment records with dates
     const analytics = await Bill.aggregate([
       {
         $match: {
           user: req.user._id,
-
-          createdAt: {
+        },
+      },
+      {
+        // Unwind payments array to separate each payment
+        $unwind: {
+          path: "$payments",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $match: {
+          "payments.paymentDate": {
             $gte: startDate,
           },
         },
       },
-
       {
         $group: {
           _id: {
             day: {
-              $dayOfMonth: "$createdAt",
+              $dayOfMonth: "$payments.paymentDate",
             },
-
             month: {
-              $month: "$createdAt",
+              $month: "$payments.paymentDate",
             },
-
             year: {
-              $year: "$createdAt",
+              $year: "$payments.paymentDate",
             },
           },
-
           totalRevenue: {
-            $sum: "$receivedAmount",
+            $sum: "$payments.amount",
           },
         },
       },

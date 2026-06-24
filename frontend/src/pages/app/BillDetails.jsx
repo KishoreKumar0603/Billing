@@ -14,6 +14,8 @@ import { formatCurrency, formatDate } from "@/lib/format";
 
 import { StatusBadge } from "@/components/common/StatusBadge";
 
+import { PaymentManager } from "@/components/bills/PaymentManager";
+
 import { motion } from "framer-motion";
 
 import { toast } from "sonner";
@@ -23,10 +25,15 @@ export default function BillDetails() {
 
   const [bill, setBill] = useState(null);
 
-  useEffect(() => {
+  const loadBill = async () => {
     if (id) {
-      billsService.get(id).then((b) => setBill(b || null));
+      const b = await billsService.get(id);
+      setBill(b || null);
     }
+  };
+
+  useEffect(() => {
+    loadBill();
   }, [id]);
 
   if (!bill) {
@@ -269,6 +276,11 @@ export default function BillDetails() {
               {bill.notes}
             </div>
           )}
+
+          {/* Payment Manager (Production-level) */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <PaymentManager billId={bill._id} onPaymentChange={loadBill} />
+          </div>
         </div>
       </motion.div>
     </div>
