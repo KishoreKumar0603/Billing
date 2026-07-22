@@ -26,9 +26,7 @@ export const billsService = {
   */
 
   async get(id) {
-    const { data } = await api.get(
-      `/bill/${id}`
-    );
+    const { data } = await api.get(`/bill/${id}`);
 
     return data;
   },
@@ -42,10 +40,7 @@ export const billsService = {
   */
 
   async create(billData) {
-    const { data } = await api.post(
-      "/bill",
-      billData
-    );
+    const { data } = await api.post("/bill", billData);
 
     return data;
   },
@@ -59,10 +54,7 @@ export const billsService = {
   */
 
   async update(id, billData) {
-    const { data } = await api.put(
-      `/bill/${id}`,
-      billData
-    );
+    const { data } = await api.put(`/bill/${id}`, billData);
 
     return data;
   },
@@ -76,9 +68,7 @@ export const billsService = {
   */
 
   async remove(id) {
-    const { data } = await api.delete(
-      `/bill/${id}`
-    );
+    const { data } = await api.delete(`/bill/${id}`);
 
     return data;
   },
@@ -92,13 +82,69 @@ export const billsService = {
   */
 
   async downloadPdf(id) {
-    const response = await api.get(
-      `/bill/${id}/pdf`,
-      {
-        responseType: "blob",
-      }
-    );
+    const response = await api.get(`/bill/${id}/pdf`, {
+      responseType: "blob",
+    });
 
     return response.data;
+  },
+
+  /*
+  ==========================================
+  ADD PAYMENT (Production-level)
+  ==========================================
+  BACKEND:
+  POST /bill/:id/payments
+  */
+
+  async addPayment(billId, paymentData) {
+    const { data } = await api.post(`/bill/${billId}/payments`, paymentData);
+
+    return data;
+  },
+
+  /*
+  ==========================================
+  GET PAYMENTS
+  ==========================================
+  BACKEND:
+  GET /bill/:id/payments
+  */
+
+  async getPayments(billId) {
+    const { data } = await api.get(`/bill/${billId}/payments`);
+
+    return data;
+  },
+
+  /*
+  ==========================================
+  UPDATE PAYMENT
+  ==========================================
+  BACKEND:
+  PUT /bill/:id/payments/:paymentId
+  */
+
+  async updatePayment(billId, paymentId, paymentData) {
+    const { data } = await api.put(
+      `/bill/${billId}/payments/${paymentId}`,
+      paymentData,
+    );
+
+    return data;
+  },
+
+  /*
+  ==========================================
+  REMOVE PAYMENT
+  ==========================================
+  BACKEND:
+  DELETE /bill/:id/payments/:paymentId
+  */
+
+  async removePayment(billId, paymentId) {
+    const { data } = await api.delete(`/bill/${billId}/payments/${paymentId}`);
+
+    return data;
   },
 };

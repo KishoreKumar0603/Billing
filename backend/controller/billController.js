@@ -168,6 +168,20 @@ export const createBill = async (req, res) => {
       receivedAmount,
     );
 
+    // Prepare payments array (new system)
+    const payments =
+      receivedAmount > 0
+        ? [
+            {
+              amount: receivedAmount,
+              paymentDate: new Date(),
+              paymentMethod: "cash",
+              reference: "",
+              notes: "Initial payment on bill creation",
+            },
+          ]
+        : [];
+
     // ==================================================
     // CREATE BILL
     // ==================================================
@@ -201,8 +215,11 @@ export const createBill = async (req, res) => {
 
           paymentStatus: paymentData.paymentStatus,
 
+          payments: payments,
+
           status,
-          billNumber:lotNumber.trim() + new Date().getDate() + new Date().getMinutes(),
+          billNumber:
+            lotNumber.trim() + new Date().getDate() + new Date().getMinutes(),
 
           notes: notes?.trim() || "",
         },
@@ -397,10 +414,7 @@ export const getBills = async (req, res) => {
 // ======================================================
 // GET SINGLE BILL
 // ======================================================
-export const getSingleBill = async (
-  req,
-  res,
-) => {
+export const getSingleBill = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -414,10 +428,7 @@ export const getSingleBill = async (
       _id: id,
 
       user: req.user._id,
-    }).populate(
-      "customer",
-      "name phone address"
-    );
+    }).populate("customer", "name phone address");
 
     if (!bill) {
       return res.status(404).json({
@@ -554,6 +565,278 @@ export const deleteBill = async (req, res) => {
 
     return res.status(200).json({
       message: "Bill deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// ======================================================
+// ADD PAYMENT (Production-level payment tracking)
+// ======================================================
+
+export const addPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!validateObjectId(id)) {
+      return res.status(400).json({
+        error: "Invalid bill ID",
+      });
+    }
+
+    const {
+      amount,
+      paymentDate,
+      paymentMethod = "cash",
+      reference = "",
+      notes = "",
+    } = req.body;
+
+    // Validation
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        error: "Payment amount must be greater than 0",
+      });
+    }
+
+    const bill = await Bill.findOne({
+      _id: id,
+      user: req.user._id,
+    });
+
+    if (!bill) {
+      return res.status(404).json({
+        error: "Bill not found",
+      });
+    }
+
+    // Add payment
+    const newPayment = {
+      amount: Number(amount),
+      paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+      paymentMethod: paymentMethod || "cash",
+      reference: reference?.trim() || "",
+      notes: notes?.trim() || "",
+    };
+
+    bill.payments.push(newPayment);
+
+    // Sync payment fields
+    bill.syncPaymentFields();
+
+    // Update customer stats if needed
+    const customer = await Customer.findById(bill.customer);
+    if (customer) {
+      const oldReceived = bill.payments
+        .slice(0, -1)
+        .reduce((sum, p) => sum + p.amount, 0);
+      const newReceived = oldReceived + amount;
+      const difference = newReceived - oldReceived;
+
+      customer.totalReceivedAmount += difference;
+      customer.totalPendingAmount -= difference;
+      await customer.save();
+    }
+
+    await bill.save();
+
+    return res.status(201).json({
+      message: "Payment added successfully",
+      payment: newPayment,
+      bill: bill,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// ======================================================
+// GET PAYMENTS
+// ======================================================
+
+export const getPayments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!validateObjectId(id)) {
+      return res.status(400).json({
+        error: "Invalid bill ID",
+      });
+    }
+
+    const bill = await Bill.findOne({
+      _id: id,
+      user: req.user._id,
+    });
+
+    if (!bill) {
+      return res.status(404).json({
+        error: "Bill not found",
+      });
+    }
+
+    return res.status(200).json({
+      billId: bill._id,
+      billNumber: bill.billNumber,
+      totalAmount: bill.totalAmount,
+      totalReceived: bill.receivedAmount,
+      balanceAmount: bill.balanceAmount,
+      paymentStatus: bill.paymentStatus,
+      payments: bill.payments.sort(
+        (a, b) => new Date(b.paymentDate) - new Date(a.paymentDate),
+      ),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// ======================================================
+// UPDATE PAYMENT
+// ======================================================
+
+export const updatePayment = async (req, res) => {
+  try {
+    const { id, paymentId } = req.params;
+    const { amount, paymentDate, paymentMethod, reference, notes } = req.body;
+
+    if (!validateObjectId(id) || !validateObjectId(paymentId)) {
+      return res.status(400).json({
+        error: "Invalid bill or payment ID",
+      });
+    }
+
+    const bill = await Bill.findOne({
+      _id: id,
+      user: req.user._id,
+    });
+
+    if (!bill) {
+      return res.status(404).json({
+        error: "Bill not found",
+      });
+    }
+
+    const paymentIndex = bill.payments.findIndex(
+      (p) => p._id.toString() === paymentId,
+    );
+
+    if (paymentIndex === -1) {
+      return res.status(404).json({
+        error: "Payment not found",
+      });
+    }
+
+    // Get old amount for customer update
+    const oldAmount = bill.payments[paymentIndex].amount;
+
+    // Update payment fields
+    if (amount && amount > 0) {
+      bill.payments[paymentIndex].amount = Number(amount);
+    }
+    if (paymentDate) {
+      bill.payments[paymentIndex].paymentDate = new Date(paymentDate);
+    }
+    if (paymentMethod) {
+      bill.payments[paymentIndex].paymentMethod = paymentMethod;
+    }
+    if (reference !== undefined) {
+      bill.payments[paymentIndex].reference = reference?.trim() || "";
+    }
+    if (notes !== undefined) {
+      bill.payments[paymentIndex].notes = notes?.trim() || "";
+    }
+
+    const newAmount = bill.payments[paymentIndex].amount;
+    const amountDifference = newAmount - oldAmount;
+
+    // Sync payment fields
+    bill.syncPaymentFields();
+
+    // Update customer stats
+    const customer = await Customer.findById(bill.customer);
+    if (customer && amountDifference !== 0) {
+      customer.totalReceivedAmount += amountDifference;
+      customer.totalPendingAmount -= amountDifference;
+      await customer.save();
+    }
+
+    await bill.save();
+
+    return res.status(200).json({
+      message: "Payment updated successfully",
+      payment: bill.payments[paymentIndex],
+      bill: bill,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+// ======================================================
+// REMOVE PAYMENT
+// ======================================================
+
+export const removePayment = async (req, res) => {
+  try {
+    const { id, paymentId } = req.params;
+
+    if (!validateObjectId(id) || !validateObjectId(paymentId)) {
+      return res.status(400).json({
+        error: "Invalid bill or payment ID",
+      });
+    }
+
+    const bill = await Bill.findOne({
+      _id: id,
+      user: req.user._id,
+    });
+
+    if (!bill) {
+      return res.status(404).json({
+        error: "Bill not found",
+      });
+    }
+
+    const paymentIndex = bill.payments.findIndex(
+      (p) => p._id.toString() === paymentId,
+    );
+
+    if (paymentIndex === -1) {
+      return res.status(404).json({
+        error: "Payment not found",
+      });
+    }
+
+    const removedPayment = bill.payments[paymentIndex];
+    bill.payments.splice(paymentIndex, 1);
+
+    // Sync payment fields
+    bill.syncPaymentFields();
+
+    // Update customer stats
+    const customer = await Customer.findById(bill.customer);
+    if (customer) {
+      customer.totalReceivedAmount -= removedPayment.amount;
+      customer.totalPendingAmount += removedPayment.amount;
+      await customer.save();
+    }
+
+    await bill.save();
+
+    return res.status(200).json({
+      message: "Payment removed successfully",
+      removedPayment: removedPayment,
+      bill: bill,
     });
   } catch (error) {
     return res.status(500).json({
